@@ -1,0 +1,15 @@
+{
+  "name": "stats",
+  "version": "1.0.0",
+  "description": "Stats and metrics aggregator for Redis-backed jobs",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "prom-client": "^15.1.3"
+  }
+}

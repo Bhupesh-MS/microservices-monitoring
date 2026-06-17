@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: worker-monitor
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: worker
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
