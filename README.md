@@ -14,6 +14,8 @@ This project contains a Redis-backed Node.js microservices system designed for K
 ## Prerequisites
 
 - Docker
+- Node.js 20+
+- npm
 - kubectl
 - Minikube or Kind
 - Helm
@@ -27,23 +29,66 @@ minikube addons enable metrics-server
 
 For Kind, install metrics-server with a configuration suitable for local clusters.
 
+## Local Development
+
+Install all workspace dependencies from the repository root:
+
+```bash
+npm install
+```
+
+Run quality checks for every service and shared package:
+
+```bash
+npm run lint
+npm run format:check
+npm test
+```
+
+Run one workspace test suite from the root:
+
+```bash
+npm run test:api
+npm run test:worker
+npm run test:stats
+npm run test:env
+npm run test:logger
+npm run test:redis
+```
+
+Run an individual service:
+
+```bash
+npm run dev --workspace services/api
+npm run dev --workspace services/worker
+npm run dev --workspace services/stats
+```
+
+Shared utilities are split into independent workspace packages:
+
+- `packages/env` provides `@microservices-monitoring/env`.
+- `packages/logger` provides `@microservices-monitoring/logger`.
+- `packages/redis` provides `@microservices-monitoring/redis`.
+
+Local environment values live in the root `.env` file. Each service reads only the variables it needs from that file or from its deployment environment.
+
 ## Build Images
 
 From the `microservices-monitoring` directory:
 
 ```bash
-docker build -t microservices-monitoring/api:latest services/api
-docker build -t microservices-monitoring/worker:latest services/worker
-docker build -t microservices-monitoring/stats:latest services/stats
+docker build -f services/api/Dockerfile -t microservices-monitoring/api:latest .
+docker build -f services/worker/Dockerfile -t microservices-monitoring/worker:latest .
+docker build -f services/stats/Dockerfile -t microservices-monitoring/stats:latest .
 ```
 
 For Minikube, build inside the Minikube Docker daemon:
 
 ```bash
 eval "$(minikube docker-env)"
-docker build -t microservices-monitoring/api:latest services/api
-docker build -t microservices-monitoring/worker:latest services/worker
-docker build -t microservices-monitoring/stats:latest services/stats
+docker build -f services/api/Dockerfile -t microservices-monitoring/api:latest .
+docker build -f services/worker/Dockerfile -t microservices-monitoring/worker:latest .
+docker build -f services/stats/Dockerfile -t microservices-monitoring/stats:latest .
 ```
 
 For Kind, load local images into the cluster:

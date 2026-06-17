@@ -1,0 +1,12 @@
+{
+  "name": "@microservices-monitoring/redis",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ioredis": "^5.4.1"
+  }
+}

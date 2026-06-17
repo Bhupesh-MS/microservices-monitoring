@@ -1,5 +1,5 @@
 const client = require('prom-client');
-const { getStats } = require('../routes/stats');
+const { createStatsService } = require('../services/statsService');
 
 client.collectDefaultMetrics({
   prefix: 'stats_'
@@ -31,7 +31,8 @@ const avgJobProcessingTimeSeconds = new client.Gauge({
 });
 
 async function collectStatsMetrics() {
-  const stats = await getStats();
+  const statsService = createStatsService();
+  const stats = await statsService.getStats();
   totalJobsSubmitted.set(stats.totalJobsSubmitted);
   totalJobsCompleted.set(stats.totalJobsCompleted);
   queueLength.set(stats.queueLength);

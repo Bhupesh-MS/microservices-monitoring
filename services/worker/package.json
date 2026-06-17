@@ -5,12 +5,15 @@
   "main": "src/worker.js",
   "scripts": {
     "start": "node src/worker.js",
-    "dev": "node --watch src/worker.js"
+    "dev": "node --watch src/worker.js",
+    "test": "node --test"
   },
   "dependencies": {
+    "@microservices-monitoring/env": "file:../../packages/env",
+    "@microservices-monitoring/logger": "file:../../packages/logger",
+    "@microservices-monitoring/redis": "file:../../packages/redis",
     "bcryptjs": "^2.4.3",
     "express": "^4.19.2",
-    "ioredis": "^5.4.1",
     "prom-client": "^15.1.3"
   }
 }

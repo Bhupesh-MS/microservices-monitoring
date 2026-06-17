@@ -1,0 +1,32 @@
+{
+  "name": "microservices-monitoring",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "prepare": "husky",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "test": "npm test --workspaces --if-present",
+    "test:api": "npm test --workspace services/api",
+    "test:stats": "npm test --workspace services/stats",
+    "test:worker": "npm test --workspace services/worker",
+    "test:env": "npm test --workspace packages/env",
+    "test:logger": "npm test --workspace packages/logger",
+    "test:redis": "npm test --workspace packages/redis"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/js": "^9.29.0",
+    "eslint": "^9.29.0",
+    "globals": "^15.15.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.5.3"
+  }
+}
