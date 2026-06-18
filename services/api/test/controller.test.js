@@ -135,7 +135,12 @@ test('API server error handler returns validation and internal errors', () => {
   const validationResponse = createJsonResponse();
   const internalResponse = createJsonResponse();
 
-  errorLayer.handle({ statusCode: 400, message: 'bad request' }, {}, validationResponse, assert.fail);
+  errorLayer.handle(
+    { statusCode: 400, message: 'bad request' },
+    {},
+    validationResponse,
+    assert.fail
+  );
   errorLayer.handle(new Error('boom'), {}, internalResponse, assert.fail);
 
   assert.equal(validationResponse.statusCode, 400);
