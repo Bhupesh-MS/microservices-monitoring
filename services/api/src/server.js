@@ -2,7 +2,14 @@ const express = require('express');
 const { loadRootEnv } = require('@microservices-monitoring/env');
 const { createLogger } = require('@microservices-monitoring/logger');
 
-loadRootEnv(['PORT', 'REDIS_HOST', 'REDIS_PORT', 'JOB_QUEUE_NAME']);
+loadRootEnv([
+  'PORT',
+  'REDIS_HOST',
+  'REDIS_PORT',
+  'JOB_QUEUE_NAME',
+  'PRIME_LIMIT',
+  'PRIME_LIMIT_MAX'
+]);
 
 const { getHealth, getHealthStatus } = require('./controllers/healthController');
 const submitRouter = require('./routes/submit');
@@ -20,8 +27,12 @@ app.use('/submit', submitRouter);
 app.use('/status', statusRouter);
 
 app.use((error, _req, res, _next) => {
+  if (error.statusCode) {
+    return res.status(error.statusCode).json({ error: error.message });
+  }
+
   logger.error('Unhandled request error', error);
-  res.status(500).json({ error: 'Internal server error' });
+  return res.status(500).json({ error: 'Internal server error' });
 });
 
 function start() {

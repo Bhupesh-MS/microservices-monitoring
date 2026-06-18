@@ -10,14 +10,4 @@ async function submitJob(req, res, next) {
   }
 }
 
-async function submitDefaultJob(_req, res, next) {
-  try {
-    const jobService = createJobService();
-    const job = await jobService.submitJob({});
-    res.status(202).json(job);
-  } catch (error) {
-    next(error);
-  }
-}
-
-module.exports = { submitDefaultJob, submitJob };
+module.exports = { submitJob };

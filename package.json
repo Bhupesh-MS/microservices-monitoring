@@ -8,11 +8,13 @@
   ],
   "scripts": {
     "prepare": "husky",
+    "start": "node scripts/run-project.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "test": "npm test --workspaces --if-present",
+    "test:coverage": "npm run coverage --workspaces --if-present",
     "test:api": "npm test --workspace services/api",
     "test:stats": "npm test --workspace services/stats",
     "test:worker": "npm test --workspace services/worker",

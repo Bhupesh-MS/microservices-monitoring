@@ -1,4 +1,15 @@
-function calculatePrimes(limit = Number(process.env.PRIME_LIMIT || 100000)) {
+function getPrimeLimit(payload = {}) {
+  const limit = payload.limit ?? Number(process.env.PRIME_LIMIT || 100000);
+
+  if (!Number.isSafeInteger(limit) || limit < 2) {
+    throw new Error('Prime job limit must be an integer greater than or equal to 2');
+  }
+
+  return limit;
+}
+
+function calculatePrimes(payload = {}) {
+  const limit = getPrimeLimit(payload);
   const primes = [];
 
   for (let number = 2; number <= limit; number += 1) {
@@ -19,8 +30,9 @@ function calculatePrimes(limit = Number(process.env.PRIME_LIMIT || 100000)) {
   return {
     limit,
     count: primes.length,
-    lastPrime: primes[primes.length - 1]
+    lastPrime: primes[primes.length - 1],
+    primes
   };
 }
 
-module.exports = { calculatePrimes };
+module.exports = { calculatePrimes, getPrimeLimit };

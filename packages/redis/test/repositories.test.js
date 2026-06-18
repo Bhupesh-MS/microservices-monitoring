@@ -46,6 +46,14 @@ test('job repository maps stored job records', async () => {
   });
 });
 
+test('job repository returns undefined for missing records', async () => {
+  const repository = createJobRepository({
+    hgetall: async () => ({})
+  });
+
+  assert.equal(await repository.findById('missing'), undefined);
+});
+
 test('job repository creates queued jobs and increments submitted counter', async () => {
   const calls = [];
   const repository = createJobRepository({
@@ -74,12 +82,41 @@ test('job repository creates queued jobs and increments submitted counter', asyn
 test('queue repository parses blocking pop results', async () => {
   const repository = createQueueRepository(
     {
-      blpop: async () => ['jobs:queue', '{"id":"job-1","type":"sort"}']
+      blpop: async () => ['jobs:queue', '{"id":"job-1","type":"prime"}']
     },
     'jobs:queue'
   );
 
-  assert.deepEqual(await repository.popJob(), { id: 'job-1', type: 'sort' });
+  assert.deepEqual(await repository.popJob(), { id: 'job-1', type: 'prime' });
+});
+
+test('job repository marks processing, completed, and failed states', async () => {
+  const calls = [];
+  const repository = createJobRepository({
+    hset: async (...args) => calls.push(['hset-direct', ...args]),
+    multi: () => createMultiStub(calls)
+  });
+
+  await repository.markProcessing('job-1', 'worker-1');
+  await repository.markCompleted('job-1', { count: 4 }, 0.25);
+  await repository.markFailed('job-2', 'bad limit');
+
+  assert.deepEqual(calls[0].slice(0, 2), ['hset-direct', 'job:job-1']);
+  assert.ok(calls.some((call) => call.includes('stats:jobs_completed')));
+  assert.ok(calls.some((call) => call.includes('stats:job_errors')));
+});
+
+test('queue repository handles empty pops and returns queue length', async () => {
+  const repository = createQueueRepository(
+    {
+      blpop: async () => undefined,
+      llen: async () => 7
+    },
+    'jobs:queue'
+  );
+
+  assert.equal(await repository.popJob(), undefined);
+  assert.equal(await repository.getLength(), 7);
 });
 
 test('stats repository calculates aggregate job stats', async () => {

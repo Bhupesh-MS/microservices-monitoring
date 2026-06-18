@@ -9,8 +9,7 @@ loadRootEnv([
   'REDIS_PORT',
   'JOB_QUEUE_NAME',
   'PRIME_LIMIT',
-  'BCRYPT_ROUNDS',
-  'SORT_SIZE'
+  'PRIME_LIMIT_MAX'
 ]);
 
 const { getHealth, getHealthStatus } = require('./controllers/healthController');
