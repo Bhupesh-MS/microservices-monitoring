@@ -1,7 +1,7 @@
 const { randomUUID } = require('crypto');
 const { createLogger } = require('@microservices-monitoring/logger');
 const { createJobRepository, getRedisClient } = require('@microservices-monitoring/redis');
-const { pickJobType } = require('../utils/jobTypes');
+const { normalizeSubmitPayload } = require('../utils/submitPayload');
 
 const queueName = process.env.JOB_QUEUE_NAME || 'jobs:queue';
 const logger = createLogger('api');
@@ -14,7 +14,8 @@ function createJobService(options = {}) {
   return {
     async submitJob(payload = {}) {
       const id = randomUUID();
-      const type = pickJobType(payload.type);
+      const normalizedPayload = normalizeSubmitPayload(payload);
+      const type = 'prime';
       const now = new Date().toISOString();
       const job = {
         id,
@@ -22,12 +23,20 @@ function createJobService(options = {}) {
         status: 'queued',
         createdAt: now,
         updatedAt: now,
-        payload
+        payload: normalizedPayload
       };
 
+      logger.info('Queueing job', { jobId: id, type, limit: normalizedPayload.limit });
       await jobRepository.createQueuedJob(job, queueName);
+      logger.info('Job state changed', {
+        jobId: id,
+        type,
+        status: 'queued',
+        queueName,
+        limit: normalizedPayload.limit
+      });
 
-      return { id, type, status: 'queued' };
+      return { id, type, status: 'queued', payload: normalizedPayload };
     },
 
     async getJobStatus(id) {

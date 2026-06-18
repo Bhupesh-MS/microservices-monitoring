@@ -1,6 +1,6 @@
 # Worker Service
 
-The worker service consumes Redis jobs, runs CPU-heavy processors, stores results, and exposes Prometheus metrics.
+The worker service consumes Redis jobs, calculates prime numbers up to each submitted limit, stores results, and exposes Prometheus metrics.
 
 ## Endpoints
 
@@ -16,8 +16,7 @@ The worker service loads only these values from the root `.env` file during loca
 - `REDIS_PORT`
 - `JOB_QUEUE_NAME`
 - `PRIME_LIMIT`
-- `BCRYPT_ROUNDS`
-- `SORT_SIZE`
+- `PRIME_LIMIT_MAX`
 
 ## Local Development
 
@@ -45,7 +44,7 @@ npm test
 - `src/controllers` contains HTTP handlers for health and metrics.
 - `src/services` contains worker job-consumption logic.
 - `src/utils` contains local job-processing dispatch helpers.
-- `src/processors` contains CPU-bound job implementations.
+- `src/processors` contains the prime-number processor.
 - Redis persistence is accessed through repositories exported by `@microservices-monitoring/redis`.
 
 ## Docker
@@ -53,5 +52,5 @@ npm test
 Build from the repository root so the shared logger and Redis packages are included:
 
 ```bash
-docker build -f services/worker/Dockerfile -t microservices-monitoring/worker:latest .
+docker build -f services/worker/Dockerfile -t microservices-monitoring/worker:1.0.0 .
 ```

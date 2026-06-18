@@ -22,17 +22,39 @@ function createWorkerService(redis, blockingRedis, options = {}) {
 
     try {
       await jobRepository.markProcessing(job.id, workerName);
+      logger.info('Job state changed', {
+        jobId: job.id,
+        type: job.type,
+        status: 'processing',
+        worker: workerName,
+        limit: job.payload?.limit
+      });
 
-      const result = processJob(job.type);
+      const result = processJob(job.type, job.payload || {});
       const durationSeconds = (Date.now() - startedAt) / 1000;
 
       await jobRepository.markCompleted(job.id, result, durationSeconds);
+      logger.info('Job state changed', {
+        jobId: job.id,
+        type: job.type,
+        status: 'completed',
+        worker: workerName,
+        durationSeconds,
+        resultCount: result.count
+      });
 
       jobsProcessedTotal.inc({ ...labels, status: 'success' });
       jobProcessingTimeSeconds.observe(labels, durationSeconds);
       logger.info('Completed job', { jobId: job.id, type: job.type, durationSeconds });
     } catch (error) {
       await jobRepository.markFailed(job.id, error.message);
+      logger.error('Job state changed', {
+        jobId: job.id,
+        type: job.type,
+        status: 'failed',
+        worker: workerName,
+        error: error.message
+      });
 
       jobsProcessedTotal.inc({ ...labels, status: 'error' });
       jobErrorsTotal.inc(labels);

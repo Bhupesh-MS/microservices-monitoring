@@ -8,12 +8,14 @@ COPY packages/redis/package.json ./packages/redis/package.json
 COPY services/api/package.json ./services/api/package.json
 COPY services/worker/package.json ./services/worker/package.json
 COPY services/stats/package.json ./services/stats/package.json
-RUN npm install --omit=dev --workspace services/stats
-COPY packages/env ./packages/env
-COPY packages/logger ./packages/logger
-COPY packages/redis ./packages/redis
-COPY services/stats ./services/stats
+RUN npm ci --omit=dev --ignore-scripts --workspace services/stats
+COPY --chown=node:node packages/env ./packages/env
+COPY --chown=node:node packages/logger ./packages/logger
+COPY --chown=node:node packages/redis ./packages/redis
+COPY --chown=node:node services/stats ./services/stats
 
+ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
-CMD ["npm", "start", "--workspace", "services/stats"]
+USER node
+CMD ["node", "services/stats/src/server.js"]

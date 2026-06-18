@@ -14,22 +14,26 @@ spec:
       labels:
         app: api
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: api
-          image: microservices-monitoring/api:latest
+          image: microservices-monitoring/api:1.0.0
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
           ports:
             - name: http
               containerPort: 3000
-          env:
-            - name: PORT
-              value: "3000"
-            - name: REDIS_HOST
-              value: redis
-            - name: REDIS_PORT
-              value: "6379"
-            - name: JOB_QUEUE_NAME
-              value: jobs:queue
+          envFrom:
+            - configMapRef:
+                name: app-config
           readinessProbe:
             httpGet:
               path: /health
@@ -42,6 +46,12 @@ spec:
               port: http
             initialDelaySeconds: 15
             periodSeconds: 20
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 12
+            periodSeconds: 5
           resources:
             requests:
               cpu: 100m

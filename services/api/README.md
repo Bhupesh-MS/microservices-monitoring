@@ -5,8 +5,7 @@ The API service accepts job submissions and exposes job status lookup endpoints.
 ## Endpoints
 
 - `GET /health` returns service health.
-- `POST /submit` submits a job payload.
-- `GET /submit` submits a default job.
+- `POST /submit` submits a prime job payload with exactly one field: `limit`.
 - `GET /status/:id` returns the stored status and result for a job.
 
 ## Environment
@@ -17,6 +16,7 @@ The API service loads only these values from the root `.env` file during local d
 - `REDIS_HOST`
 - `REDIS_PORT`
 - `JOB_QUEUE_NAME`
+- `PRIME_LIMIT_MAX`
 
 ## Local Development
 

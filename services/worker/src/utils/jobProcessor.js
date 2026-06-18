@@ -1,18 +1,8 @@
 const { calculatePrimes } = require('../processors/prime');
-const { runBcryptHash } = require('../processors/bcrypt');
-const { generateAndSort } = require('../processors/sort');
 
-function processJob(type) {
+function processJob(type, payload = {}) {
   if (type === 'prime') {
-    return calculatePrimes();
-  }
-
-  if (type === 'bcrypt') {
-    return runBcryptHash();
-  }
-
-  if (type === 'sort') {
-    return generateAndSort();
+    return calculatePrimes(payload);
   }
 
   throw new Error(`Unsupported job type: ${type}`);

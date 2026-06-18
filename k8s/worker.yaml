@@ -14,28 +14,26 @@ spec:
       labels:
         app: worker
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: worker
-          image: microservices-monitoring/worker:latest
+          image: microservices-monitoring/worker:1.0.0
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
           ports:
             - name: http
               containerPort: 3000
-          env:
-            - name: PORT
-              value: "3000"
-            - name: REDIS_HOST
-              value: redis
-            - name: REDIS_PORT
-              value: "6379"
-            - name: JOB_QUEUE_NAME
-              value: jobs:queue
-            - name: PRIME_LIMIT
-              value: "100000"
-            - name: SORT_SIZE
-              value: "100000"
-            - name: BCRYPT_ROUNDS
-              value: "10"
+          envFrom:
+            - configMapRef:
+                name: app-config
           readinessProbe:
             httpGet:
               path: /health
@@ -48,6 +46,12 @@ spec:
               port: http
             initialDelaySeconds: 15
             periodSeconds: 20
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 12
+            periodSeconds: 5
           resources:
             requests:
               cpu: 250m

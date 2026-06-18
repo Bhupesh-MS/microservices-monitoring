@@ -4,8 +4,8 @@ This project contains a Redis-backed Node.js microservices system designed for K
 
 ## Architecture
 
-- **API:** exposes `POST /submit`, `GET /submit`, and `GET /status/:id`; pushes jobs into Redis.
-- **Worker:** consumes Redis jobs, runs CPU-heavy work, stores results, and exposes `/metrics`.
+- **API:** exposes `POST /submit` and `GET /status/:id`; pushes jobs into Redis.
+- **Worker:** consumes Redis jobs, calculates prime numbers up to the submitted limit, stores results, and exposes `/metrics`.
 - **Stats:** exposes `GET /stats` and `/metrics` for queue length and aggregate job counters.
 - **Redis:** queue, job status store, and aggregate counters.
 - **HPA:** scales worker pods from 2 to 10 replicas when CPU utilization exceeds 70%.
@@ -43,6 +43,7 @@ Run quality checks for every service and shared package:
 npm run lint
 npm run format:check
 npm test
+npm run test:coverage
 ```
 
 Run one workspace test suite from the root:
@@ -64,6 +65,12 @@ npm run dev --workspace services/worker
 npm run dev --workspace services/stats
 ```
 
+Run all three services from the repository root:
+
+```bash
+npm start
+```
+
 Shared utilities are split into independent workspace packages:
 
 - `packages/env` provides `@microservices-monitoring/env`.
@@ -72,31 +79,35 @@ Shared utilities are split into independent workspace packages:
 
 Local environment values live in the root `.env` file. Each service reads only the variables it needs from that file or from its deployment environment.
 
+Prime job submissions are controlled by:
+
+- `PRIME_LIMIT_MAX`: highest accepted request limit.
+
 ## Build Images
 
 From the `microservices-monitoring` directory:
 
 ```bash
-docker build -f services/api/Dockerfile -t microservices-monitoring/api:latest .
-docker build -f services/worker/Dockerfile -t microservices-monitoring/worker:latest .
-docker build -f services/stats/Dockerfile -t microservices-monitoring/stats:latest .
+docker build -f services/api/Dockerfile -t microservices-monitoring/api:1.0.0 .
+docker build -f services/worker/Dockerfile -t microservices-monitoring/worker:1.0.0 .
+docker build -f services/stats/Dockerfile -t microservices-monitoring/stats:1.0.0 .
 ```
 
 For Minikube, build inside the Minikube Docker daemon:
 
 ```bash
 eval "$(minikube docker-env)"
-docker build -f services/api/Dockerfile -t microservices-monitoring/api:latest .
-docker build -f services/worker/Dockerfile -t microservices-monitoring/worker:latest .
-docker build -f services/stats/Dockerfile -t microservices-monitoring/stats:latest .
+docker build -f services/api/Dockerfile -t microservices-monitoring/api:1.0.0 .
+docker build -f services/worker/Dockerfile -t microservices-monitoring/worker:1.0.0 .
+docker build -f services/stats/Dockerfile -t microservices-monitoring/stats:1.0.0 .
 ```
 
 For Kind, load local images into the cluster:
 
 ```bash
-kind load docker-image microservices-monitoring/api:latest
-kind load docker-image microservices-monitoring/worker:latest
-kind load docker-image microservices-monitoring/stats:latest
+kind load docker-image microservices-monitoring/api:1.0.0
+kind load docker-image microservices-monitoring/worker:1.0.0
+kind load docker-image microservices-monitoring/stats:1.0.0
 ```
 
 ## Deploy Prometheus and Grafana
@@ -117,6 +128,7 @@ kubectl get pods -l "release=prometheus"
 
 ```bash
 kubectl apply -f k8s/redis.yaml
+kubectl apply -f k8s/config.yaml
 kubectl apply -f k8s/api.yaml
 kubectl apply -f k8s/worker.yaml
 kubectl apply -f k8s/stats.yaml
@@ -159,7 +171,9 @@ Add the IP to `/etc/hosts`:
 Then use:
 
 ```bash
-curl -X POST http://microservices.local/submit
+curl -X POST http://microservices.local/submit \
+  -H 'Content-Type: application/json' \
+  -d '{"limit":100000}'
 curl http://microservices.local/status/<job-id>
 ```
 
@@ -175,13 +189,8 @@ curl http://localhost:3001/stats
 Run the assignment load test against the API:
 
 ```bash
-ab -n 5000 -c 200 http://<api-url>/submit
-```
-
-Because `/submit` supports both `GET` and `POST`, the ApacheBench command above works directly. To send POST requests:
-
-```bash
-ab -n 5000 -c 200 -p /dev/null -T application/json http://<api-url>/submit
+printf '{"limit":100000}' >/tmp/prime-job.json
+ab -n 5000 -c 200 -p /tmp/prime-job.json -T application/json http://<api-url>/submit
 ```
 
 Watch the system while the test runs:
@@ -195,7 +204,7 @@ kubectl logs deploy/worker -f
 Expected observations:
 
 - Redis queue length grows during the burst.
-- Worker CPU rises as pods process prime, bcrypt, and sort jobs.
+- Worker CPU rises as pods process prime jobs.
 - HPA increases worker replicas when average CPU exceeds 70%.
 - Queue length drains as new worker pods become ready.
 - Grafana updates job totals, latency, queue length, and error panels.
