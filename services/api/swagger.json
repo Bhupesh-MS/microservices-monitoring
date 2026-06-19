@@ -1,0 +1,293 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Microservices Monitoring API Service",
+    "version": "1.0.0",
+    "description": "API gateway for submitting prime calculation jobs and reading job status."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Same origin as the Swagger UI page"
+    },
+    {
+      "url": "http://microservices.local",
+      "description": "Kubernetes ingress"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Check API service health",
+        "operationId": "getApiHealth",
+        "tags": ["Health"],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatus"
+                },
+                "examples": {
+                  "ok": {
+                    "value": {
+                      "status": "ok",
+                      "service": "api"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/submit": {
+      "post": {
+        "summary": "Submit a prime calculation job",
+        "operationId": "submitPrimeJob",
+        "tags": ["Jobs"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitRequest"
+              },
+              "examples": {
+                "primeJob": {
+                  "value": {
+                    "limit": 100000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Job accepted and queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmittedJob"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid submit payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status/{id}": {
+      "get": {
+        "summary": "Get job status",
+        "operationId": "getJobStatus",
+        "tags": ["Jobs"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Job identifier returned by POST /submit.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stored job state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthStatus": {
+        "type": "object",
+        "required": ["status", "service"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok"]
+          },
+          "service": {
+            "type": "string",
+            "enum": ["api"]
+          }
+        }
+      },
+      "SubmitRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["limit"],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 2,
+            "description": "Inclusive upper bound for prime calculation. Must not exceed PRIME_LIMIT_MAX."
+          }
+        }
+      },
+      "JobPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["limit"],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 2
+          }
+        }
+      },
+      "SubmittedJob": {
+        "type": "object",
+        "required": ["id", "type", "status", "payload"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["prime"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["queued"]
+          },
+          "payload": {
+            "$ref": "#/components/schemas/JobPayload"
+          }
+        }
+      },
+      "PrimeResult": {
+        "type": "object",
+        "required": ["limit", "count", "primes"],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 2
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lastPrime": {
+            "type": "integer",
+            "nullable": true
+          },
+          "primes": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "JobStatus": {
+        "type": "object",
+        "required": ["id", "type", "status", "payload"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["prime"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["queued", "processing", "completed", "failed"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "worker": {
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/JobPayload"
+          },
+          "result": {
+            "$ref": "#/components/schemas/PrimeResult"
+          },
+          "processingTimeSeconds": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

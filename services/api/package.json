@@ -13,6 +13,7 @@
     "@microservices-monitoring/env": "file:../../packages/env",
     "@microservices-monitoring/logger": "file:../../packages/logger",
     "@microservices-monitoring/redis": "file:../../packages/redis",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "swagger-ui-express": "^5.0.1"
   }
 }

@@ -149,6 +149,12 @@ test('API server error handler returns validation and internal errors', () => {
   assert.deepEqual(internalResponse.body, { error: 'Internal server error' });
 });
 
+test('API server registers Swagger UI docs route', () => {
+  const { app } = require('../src/server');
+
+  assert.ok(app._router.stack.some((layer) => layer.regexp?.test('/api-docs')));
+});
+
 test('API start returns the server from app.listen', () => {
   const originalPort = process.env.PORT;
   process.env.PORT = '0';

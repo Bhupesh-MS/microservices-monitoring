@@ -1,6 +1,8 @@
 const express = require('express');
+const swaggerUi = require('swagger-ui-express');
 const { loadRootEnv } = require('@microservices-monitoring/env');
 const { createLogger } = require('@microservices-monitoring/logger');
+const swaggerDocument = require('../swagger.json');
 
 loadRootEnv([
   'PORT',
@@ -22,6 +24,7 @@ const logger = createLogger('api');
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/health', getHealth);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/submit', submitRouter);
 app.use('/status', statusRouter);
@@ -35,6 +38,11 @@ app.use((error, _req, res, _next) => {
   return res.status(500).json({ error: 'Internal server error' });
 });
 
+/**
+ * Starts the API HTTP server.
+ *
+ * @returns {import('http').Server} Running HTTP server.
+ */
 function start() {
   return app.listen(port, () => {
     logger.info('API listening', { port });
