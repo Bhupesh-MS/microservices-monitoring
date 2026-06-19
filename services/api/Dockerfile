@@ -15,7 +15,6 @@ COPY --chown=node:node packages/redis ./packages/redis
 COPY --chown=node:node services/api ./services/api
 
 ENV NODE_ENV=production
-ENV PORT=3000
 EXPOSE 3000
-USER node
+USER 1000
 CMD ["node", "services/api/src/server.js"]
