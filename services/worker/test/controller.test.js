@@ -107,6 +107,7 @@ test('worker module exports configured Express app', () => {
   const { app } = require('../src/worker');
 
   assert.ok(app._router.stack.some((layer) => layer.route?.path === '/health'));
+  assert.ok(app._router.stack.some((layer) => layer.regexp?.test('/api-docs')));
   assert.ok(app._router.stack.some((layer) => layer.route?.path === '/metrics'));
 
   if (originalPort === undefined) {

@@ -30,6 +30,11 @@ const avgJobProcessingTimeSeconds = new client.Gauge({
   help: 'Average completed job processing time in seconds'
 });
 
+/**
+ * Refreshes Prometheus gauges from the current aggregate stats snapshot.
+ *
+ * @returns {Promise<void>} Resolves after gauges are updated.
+ */
 async function collectStatsMetrics() {
   const statsService = createStatsService();
   const stats = await statsService.getStats();

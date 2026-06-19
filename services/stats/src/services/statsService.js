@@ -8,6 +8,19 @@ const {
 const queueName = process.env.JOB_QUEUE_NAME || 'jobs:queue';
 const logger = createLogger('stats');
 
+/**
+ * @typedef {object} StatsServiceOptions
+ * @property {object} [redis] - Redis client used when a repository is not provided.
+ * @property {{getLength(): Promise<number>}} [queueRepository] - Queue repository dependency.
+ * @property {{getJobStats(): Promise<object>}} [statsRepository] - Stats repository dependency.
+ */
+
+/**
+ * Creates a service for reading aggregate job statistics.
+ *
+ * @param {StatsServiceOptions} [options={}] - Optional dependencies for tests or alternate wiring.
+ * @returns {{getStats(): Promise<object>}} Stats service methods.
+ */
 function createStatsService(options = {}) {
   let statsRepository = options.statsRepository;
 
@@ -18,6 +31,11 @@ function createStatsService(options = {}) {
   }
 
   return {
+    /**
+     * Returns aggregate job counters, queue length, and average processing time.
+     *
+     * @returns {Promise<object>} Current aggregate job statistics.
+     */
     getStats() {
       return statsRepository.getJobStats();
     }

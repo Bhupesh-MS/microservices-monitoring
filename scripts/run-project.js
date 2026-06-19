@@ -5,6 +5,12 @@ const { spawn } = require('child_process');
 const rootDir = path.resolve(__dirname, '..');
 const envPath = path.join(rootDir, '.env');
 
+/**
+ * Parses dotenv-style values from a file path if it exists.
+ *
+ * @param {string} filePath - Environment file path.
+ * @returns {Record<string, string>} Parsed environment values.
+ */
 function parseEnvFile(filePath) {
   if (!fs.existsSync(filePath)) {
     return {};
@@ -91,6 +97,11 @@ const children = services.map((service) => {
   return child;
 });
 
+/**
+ * Stops all child service processes started by this runner.
+ *
+ * @returns {void}
+ */
 function stopAll() {
   for (const child of children) {
     if (!child.killed) {

@@ -1,0 +1,156 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Microservices Monitoring Stats Service",
+    "version": "1.0.0",
+    "description": "Stats service for aggregate job counters, queue length, and Prometheus metrics."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Same origin as the Swagger UI page"
+    },
+    {
+      "url": "http://localhost:3001",
+      "description": "Local port-forward"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Check stats service health",
+        "operationId": "getStatsHealth",
+        "tags": ["Health"],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats": {
+      "get": {
+        "summary": "Get aggregate job statistics",
+        "operationId": "getStats",
+        "tags": ["Stats"],
+        "responses": {
+          "200": {
+            "description": "Aggregate job statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStats"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Expose Prometheus metrics",
+        "operationId": "getStatsMetrics",
+        "tags": ["Metrics"],
+        "responses": {
+          "200": {
+            "description": "Prometheus text exposition metrics",
+            "content": {
+              "text/plain; version=0.0.4; charset=utf-8": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthStatus": {
+        "type": "object",
+        "required": ["status", "service"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok"]
+          },
+          "service": {
+            "type": "string",
+            "enum": ["stats"]
+          }
+        }
+      },
+      "JobStats": {
+        "type": "object",
+        "required": [
+          "totalJobsSubmitted",
+          "totalJobsCompleted",
+          "totalJobErrors",
+          "queueLength",
+          "avgProcessingTimeSeconds"
+        ],
+        "properties": {
+          "totalJobsSubmitted": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalJobsCompleted": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalJobErrors": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "queueLength": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "avgProcessingTimeSeconds": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -14,6 +14,7 @@
     "@microservices-monitoring/logger": "file:../../packages/logger",
     "@microservices-monitoring/redis": "file:../../packages/redis",
     "express": "^4.19.2",
-    "prom-client": "^15.1.3"
+    "prom-client": "^15.1.3",
+    "swagger-ui-express": "^5.0.1"
   }
 }

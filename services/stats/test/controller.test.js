@@ -153,6 +153,12 @@ test('stats metrics controller writes metrics and forwards errors', async () => 
   delete require.cache[controllerPath];
 });
 
+test('stats server registers Swagger UI docs route', () => {
+  const { app } = require('../src/server');
+
+  assert.ok(app._router.stack.some((layer) => layer.regexp?.test('/api-docs')));
+});
+
 test('stats server error handler and start use Express app wiring', () => {
   const originalPort = process.env.PORT;
   process.env.PORT = '0';

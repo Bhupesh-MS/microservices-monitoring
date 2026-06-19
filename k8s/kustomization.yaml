@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - api.yaml
+  - worker.yaml
+  - stats.yaml
+  - redis.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - service-monitors/stats-monitor.yaml
+  - service-monitors/worker-monitor.yaml
