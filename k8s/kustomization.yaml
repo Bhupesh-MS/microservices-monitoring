@@ -10,4 +10,3 @@ resources:
   - hpa.yaml
   - service-monitors/stats-monitor.yaml
   - service-monitors/worker-monitor.yaml
-
