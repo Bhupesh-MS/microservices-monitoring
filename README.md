@@ -11,6 +11,7 @@
 ---
 
 ## 📖 Table of Contents
+
 - [Architecture](#-architecture)
 - [Tech Stack](#-tech-stack)
 - [Prerequisites](#-prerequisites)
@@ -51,6 +52,7 @@ The system consists of three main Node.js microservices communicating via Redis,
 ## 🚀 Prerequisites
 
 Ensure you have the following installed on your machine:
+
 - [Docker](https://www.docker.com/)
 - [Node.js 20+](https://nodejs.org/) & npm
 - [Kubernetes CLI (`kubectl`)](https://kubernetes.io/docs/tasks/tools/)
@@ -68,24 +70,31 @@ Ensure you have the following installed on your machine:
 The project uses npm workspaces to manage services and shared packages.
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Code Quality & Formatting
+
 Run linting and formatting checks across all packages:
+
 ```bash
 npm run lint
 npm run format:check
 ```
 
 ### 3. Testing
+
 Run the complete test suite with coverage:
+
 ```bash
 npm test
 npm run test:coverage
 ```
+
 You can also run tests for individual workspaces:
+
 ```bash
 npm run test:api
 npm run test:worker
@@ -96,11 +105,15 @@ npm run test:redis
 ```
 
 ### 4. Running Locally
+
 Run all three services concurrently from the root directory:
+
 ```bash
 npm start
 ```
+
 Alternatively, run them individually:
+
 ```bash
 npm run dev --workspace services/api
 npm run dev --workspace services/worker
@@ -120,7 +133,9 @@ docker build -f services/stats/Dockerfile -t microservices-monitoring/stats:1.0.
 ```
 
 ### Minikube Tip
+
 Build the images directly inside the Minikube Docker daemon so they are immediately available to the cluster:
+
 ```bash
 eval "$(minikube docker-env)"
 docker build -f services/api/Dockerfile -t microservices-monitoring/api:1.0.0 .
@@ -129,7 +144,9 @@ docker build -f services/stats/Dockerfile -t microservices-monitoring/stats:1.0.
 ```
 
 ### Kind Tip
+
 Load the built images into your Kind cluster:
+
 ```bash
 kind load docker-image microservices-monitoring/api:1.0.0
 kind load docker-image microservices-monitoring/worker:1.0.0
@@ -141,7 +158,9 @@ kind load docker-image microservices-monitoring/stats:1.0.0
 ## 🚢 Kubernetes Deployment
 
 ### 1. Prometheus and Grafana
+
 Install the Kube-Prometheus stack via Helm:
+
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
@@ -149,17 +168,21 @@ helm install prometheus prometheus-community/kube-prometheus-stack
 ```
 
 Wait for the monitoring pods to be ready:
+
 ```bash
 kubectl get pods -l "release=prometheus"
 ```
 
 ### 2. Microservices
+
 You can deploy all services automatically using the provided shell script, which also enables the required Minikube add-ons (metrics-server and ingress):
+
 ```bash
 bash scripts/deploy-k8s.sh
 ```
 
 Alternatively, to apply manifests manually using Kustomize:
+
 ```bash
 minikube addons enable ingress
 minikube addons enable metrics-server
@@ -171,6 +194,7 @@ kubectl apply -k .
 ## 📊 Observability & Monitoring
 
 ### Accessing Grafana
+
 Grafana is now accessible directly via Ingress without port-forwarding.
 
 - **URL**: `http://grafana.microservices.local`
@@ -178,6 +202,7 @@ Grafana is now accessible directly via Ingress without port-forwarding.
 - **Password**: `admin` (Configured during deployment)
 
 Import the provided dashboard `grafana/dashboard.json` to view real-time metrics including:
+
 - Worker CPU and memory usage
 - Worker replica count and HPA desired replicas
 - Redis queue length
@@ -192,25 +217,33 @@ Import the provided dashboard `grafana/dashboard.json` to view real-time metrics
 Simulate a burst of traffic to trigger the Horizontal Pod Autoscaler (HPA).
 
 ### 1. DNS Configuration (Ingress)
+
 To test the application via Ingress, you must map the Ingress hostname to your Minikube IP.
 Find your Minikube IP:
+
 ```bash
 minikube ip
 ```
+
 Add the following line to your `/etc/hosts` file (requires `sudo`):
+
 ```text
 <your-minikube-ip> api.microservices.local worker.microservices.local stats.microservices.local grafana.microservices.local
 ```
 
 ### 2. Run Stress Test
+
 Using ApacheBench (`ab`), run the assignment load test against the API via its Ingress hostname:
+
 ```bash
 printf '{"limit":100000}' > /tmp/prime-job.json
 ab -n 5000 -c 200 -p /tmp/prime-job.json -T application/json http://api.microservices.local/submit
 ```
 
 ### 3. Observe Autoscaling
+
 Watch the system while the test runs:
+
 ```bash
 kubectl get hpa worker-hpa --watch
 kubectl get pods -l app=worker --watch
@@ -218,6 +251,7 @@ kubectl logs deploy/worker -f
 ```
 
 **Expected Observations:**
+
 - Redis queue length grows rapidly during the burst.
 - Worker CPU usage rises as pods process prime jobs.
 - HPA automatically increases worker replicas when average CPU exceeds 70%.
@@ -227,7 +261,9 @@ kubectl logs deploy/worker -f
 ---
 
 ## 🧹 Cleanup
+
 Remove all resources from your cluster to free up resources:
+
 ```bash
 kubectl delete -f k8s/service-monitors/
 kubectl delete -f k8s/hpa.yaml
