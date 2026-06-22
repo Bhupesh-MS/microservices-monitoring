@@ -69,7 +69,15 @@ Ensure you have the following installed on your machine:
 
 The project uses npm workspaces to manage services and shared packages.
 
-### 1. Install Dependencies
+### 1. Environment Setup
+
+Copy the sample environment file to configure your local variables:
+
+```bash
+cp .env.sample .env
+```
+
+### 2. Install Dependencies
 
 ```bash
 npm install
