@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+**/*/node_modules
+npm-debug.log
+yarn-error.log
+
+# Tests
+test
+**/*/test
+coverage
+**/*/coverage
+
+# IDE and Environment
+.env*
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Documentation & Config
+docs
+scripts
+k8s
+grafana
+README.md
+**/*/README.md
+.husky
+eslint.config.js
+prettier*
+commitlint*
+swagger.json
