@@ -16,6 +16,9 @@ The stats service loads only these values from the root `.env` file during local
 - `REDIS_HOST`
 - `REDIS_PORT`
 - `JOB_QUEUE_NAME`
+- `CORS_ORIGIN`
+- `RATE_LIMIT_WINDOW_MS`
+- `RATE_LIMIT_MAX_REQUESTS`
 
 ## Local Development
 

@@ -244,8 +244,8 @@ Add the following line to your `/etc/hosts` file (requires `sudo`):
 Using ApacheBench (`ab`), run the assignment load test against the API via its Ingress hostname:
 
 ```bash
-printf '{"limit":100000}' > /tmp/prime-job.json
-ab -n 5000 -c 200 -p /tmp/prime-job.json -T application/json http://api.microservices.local/submit
+printf '{"limit":1000000}' > /tmp/prime-job.json
+ab -n 1000 -c 50 -p /tmp/prime-job.json -T application/json http://api.microservices.local/submit
 ```
 
 ### 3. Observe Autoscaling
