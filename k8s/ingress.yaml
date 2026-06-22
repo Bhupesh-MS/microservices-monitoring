@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: api-ingress
+  name: microservices-ingress
 spec:
   ingressClassName: nginx
   rules:
-    - host: microservices.local
+    - host: api.microservices.local
       http:
         paths:
           - path: /
@@ -13,5 +13,35 @@ spec:
             backend:
               service:
                 name: api
+                port:
+                  number: 80
+    - host: worker.microservices.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: worker
+                port:
+                  number: 3000
+    - host: stats.microservices.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: stats
+                port:
+                  number: 3000
+    - host: grafana.microservices.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-grafana
                 port:
                   number: 80

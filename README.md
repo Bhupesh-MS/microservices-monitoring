@@ -1,52 +1,99 @@
-# Kubernetes Microservices Monitoring Assignment
+# Kubernetes Microservices Monitoring
 
-This project contains a Redis-backed Node.js microservices system designed for Kubernetes autoscaling and Prometheus/Grafana observability.
+![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Autoscaling-blue.svg)
+![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
+![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-orange)
+![Grafana](https://img.shields.io/badge/Grafana-Dashboards-orange)
 
-## Architecture
+> A robust, Redis-backed Node.js microservices ecosystem designed for Kubernetes autoscaling and comprehensive observability using Prometheus and Grafana.
 
-- **API:** exposes `POST /submit` and `GET /status/:id`; pushes jobs into Redis.
-- **Worker:** consumes Redis jobs, calculates prime numbers up to the submitted limit, stores results, and exposes `/metrics`.
-- **Stats:** exposes `GET /stats` and `/metrics` for queue length and aggregate job counters.
-- **Redis:** queue, job status store, and aggregate counters.
-- **HPA:** scales worker pods from 2 to 10 replicas when CPU utilization exceeds 70%.
-- **Monitoring:** `ServiceMonitor` resources scrape worker and stats pods with kube-prometheus-stack.
+---
 
-## Prerequisites
+## 📖 Table of Contents
 
-- Docker
-- Node.js 20+
-- npm
-- kubectl
-- Minikube or Kind
-- Helm
-- ApacheBench (`ab`) or another HTTP load tool
+- [Architecture](#-architecture)
+- [Tech Stack](#-tech-stack)
+- [Prerequisites](#-prerequisites)
+- [Local Development & Testing](#-local-development--testing)
+- [Docker Build & Registry](#-docker-build--registry)
+- [Kubernetes Deployment](#-kubernetes-deployment)
+- [Observability & Monitoring](#-observability--monitoring)
+- [Load Testing & Autoscaling](#-load-testing--autoscaling)
+- [Cleanup](#-cleanup)
 
-For HPA to work locally, install metrics-server:
+---
 
-```bash
-minikube addons enable metrics-server
-```
+## 🏗 Architecture
 
-For Kind, install metrics-server with a configuration suitable for local clusters.
+The system consists of three main Node.js microservices communicating via Redis, fully orchestrated on Kubernetes.
 
-## Local Development
+- **API Gateway (`api`)**: Exposes REST endpoints (`POST /submit`, `GET /status/:id`) and pushes prime calculation jobs to a Redis queue.
+- **Worker Node (`worker`)**: Consumes jobs from Redis, calculates prime numbers up to the submitted limit, stores the results, and exposes `/metrics` for Prometheus.
+- **Stats Service (`stats`)**: Aggregates queue length and job counters, exposing both REST (`GET /stats`) and Prometheus metrics (`/metrics`).
+- **Redis**: Serves as the message broker, job status store, and shared state for aggregate counters.
+- **Horizontal Pod Autoscaler (HPA)**: Automatically scales worker pods from 2 up to 10 replicas when CPU utilization exceeds 70%.
+- **Prometheus/Grafana**: Gathers metrics via Kubernetes `ServiceMonitor` and visualizes them on real-time dashboards.
 
-Install all workspace dependencies from the repository root:
+---
+
+## 💻 Tech Stack
+
+- **Backend**: Node.js 20+, Express.js
+- **Message Broker & Cache**: Redis
+- **Containerization**: Docker
+- **Orchestration**: Kubernetes (Minikube / Kind), Helm
+- **Observability**: Prometheus, Grafana, Kube-Prometheus-Stack
+- **Code Quality**: ESLint, Prettier, Husky, Commitlint
+- **Testing**: Native Node.js Test Runner
+
+---
+
+## 🚀 Prerequisites
+
+Ensure you have the following installed on your machine:
+
+- [Docker](https://www.docker.com/)
+- [Node.js 20+](https://nodejs.org/) & npm
+- [Kubernetes CLI (`kubectl`)](https://kubernetes.io/docs/tasks/tools/)
+- Local Cluster: [Minikube](https://minikube.sigs.k8s.io/docs/start/) or [Kind](https://kind.sigs.k8s.io/)
+- [Helm](https://helm.sh/)
+- ApacheBench (`ab`) for stress testing
+
+> **Note for HPA**: For the autoscaler to function locally, you must install the metrics-server.
+> Minikube: `minikube addons enable metrics-server`
+
+---
+
+## 🛠 Local Development & Testing
+
+The project uses npm workspaces to manage services and shared packages.
+
+### 1. Install Dependencies
 
 ```bash
 npm install
 ```
 
-Run quality checks for every service and shared package:
+### 2. Code Quality & Formatting
+
+Run linting and formatting checks across all packages:
 
 ```bash
 npm run lint
 npm run format:check
+```
+
+### 3. Testing
+
+Run the complete test suite with coverage:
+
+```bash
 npm test
 npm run test:coverage
 ```
 
-Run one workspace test suite from the root:
+You can also run tests for individual workspaces:
 
 ```bash
 npm run test:api
@@ -57,7 +104,15 @@ npm run test:logger
 npm run test:redis
 ```
 
-Run an individual service:
+### 4. Running Locally
+
+Run all three services concurrently from the root directory:
+
+```bash
+npm start
+```
+
+Alternatively, run them individually:
 
 ```bash
 npm run dev --workspace services/api
@@ -65,27 +120,11 @@ npm run dev --workspace services/worker
 npm run dev --workspace services/stats
 ```
 
-Run all three services from the repository root:
+---
 
-```bash
-npm start
-```
+## 🐳 Docker Build & Registry
 
-Shared utilities are split into independent workspace packages:
-
-- `packages/env` provides `@microservices-monitoring/env`.
-- `packages/logger` provides `@microservices-monitoring/logger`.
-- `packages/redis` provides `@microservices-monitoring/redis`.
-
-Local environment values live in the root `.env` file. Each service reads only the variables it needs from that file or from its deployment environment.
-
-Prime job submissions are controlled by:
-
-- `PRIME_LIMIT_MAX`: highest accepted request limit.
-
-## Build Images
-
-From the `microservices-monitoring` directory:
+To deploy to a Kubernetes cluster, build the Docker images. From the repository root:
 
 ```bash
 docker build -f services/api/Dockerfile -t microservices-monitoring/api:1.0.0 .
@@ -93,7 +132,9 @@ docker build -f services/worker/Dockerfile -t microservices-monitoring/worker:1.
 docker build -f services/stats/Dockerfile -t microservices-monitoring/stats:1.0.0 .
 ```
 
-For Minikube, build inside the Minikube Docker daemon:
+### Minikube Tip
+
+Build the images directly inside the Minikube Docker daemon so they are immediately available to the cluster:
 
 ```bash
 eval "$(minikube docker-env)"
@@ -102,7 +143,9 @@ docker build -f services/worker/Dockerfile -t microservices-monitoring/worker:1.
 docker build -f services/stats/Dockerfile -t microservices-monitoring/stats:1.0.0 .
 ```
 
-For Kind, load local images into the cluster:
+### Kind Tip
+
+Load the built images into your Kind cluster:
 
 ```bash
 kind load docker-image microservices-monitoring/api:1.0.0
@@ -110,7 +153,13 @@ kind load docker-image microservices-monitoring/worker:1.0.0
 kind load docker-image microservices-monitoring/stats:1.0.0
 ```
 
-## Deploy Prometheus and Grafana
+---
+
+## 🚢 Kubernetes Deployment
+
+### 1. Prometheus and Grafana
+
+Install the Kube-Prometheus stack via Helm:
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -118,80 +167,80 @@ helm repo update
 helm install prometheus prometheus-community/kube-prometheus-stack
 ```
 
-Wait for monitoring pods:
+Wait for the monitoring pods to be ready:
 
 ```bash
 kubectl get pods -l "release=prometheus"
 ```
 
-## Deploy the Application
+### 2. Microservices
+
+You can deploy all services automatically using the provided shell script, which also enables the required Minikube add-ons (metrics-server and ingress):
 
 ```bash
-kubectl apply -f k8s/redis.yaml
-kubectl apply -f k8s/config.yaml
-kubectl apply -f k8s/api.yaml
-kubectl apply -f k8s/worker.yaml
-kubectl apply -f k8s/stats.yaml
-kubectl apply -f k8s/hpa.yaml
-kubectl apply -f k8s/service-monitors/
+bash scripts/deploy-k8s.sh
 ```
 
-If you use the NGINX ingress controller, also apply:
-
-```bash
-kubectl apply -f k8s/ingress.yaml
-```
-
-For Minikube ingress:
+Alternatively, to apply manifests manually using Kustomize:
 
 ```bash
 minikube addons enable ingress
+minikube addons enable metrics-server
+kubectl apply -k .
 ```
 
-## Access Services
+---
 
-LoadBalancer path with Minikube:
+## 📊 Observability & Monitoring
 
-```bash
-minikube service api --url
-```
+### Accessing Grafana
 
-Ingress path:
+Grafana is now accessible directly via Ingress without port-forwarding.
+
+- **URL**: `http://grafana.microservices.local`
+- **Username**: `admin`
+- **Password**: `admin` (Configured during deployment)
+
+Import the provided dashboard `grafana/dashboard.json` to view real-time metrics including:
+
+- Worker CPU and memory usage
+- Worker replica count and HPA desired replicas
+- Redis queue length
+- Submitted and completed job totals
+- Job processing latency
+- Worker throughput and errors
+
+---
+
+## ⚡ Load Testing & Autoscaling
+
+Simulate a burst of traffic to trigger the Horizontal Pod Autoscaler (HPA).
+
+### 1. DNS Configuration (Ingress)
+
+To test the application via Ingress, you must map the Ingress hostname to your Minikube IP.
+Find your Minikube IP:
 
 ```bash
 minikube ip
 ```
 
-Add the IP to `/etc/hosts`:
+Add the following line to your `/etc/hosts` file (requires `sudo`):
 
 ```text
-<minikube-ip> microservices.local
+<your-minikube-ip> api.microservices.local worker.microservices.local stats.microservices.local grafana.microservices.local
 ```
 
-Then use:
+### 2. Run Stress Test
+
+Using ApacheBench (`ab`), run the assignment load test against the API via its Ingress hostname:
 
 ```bash
-curl -X POST http://microservices.local/submit \
-  -H 'Content-Type: application/json' \
-  -d '{"limit":100000}'
-curl http://microservices.local/status/<job-id>
+printf '{"limit":100000}' > /tmp/prime-job.json
+ab -n 5000 -c 200 -p /tmp/prime-job.json -T application/json http://api.microservices.local/submit
 ```
 
-Stats can be checked with port-forwarding:
-
-```bash
-kubectl port-forward svc/stats 3001:3000
-curl http://localhost:3001/stats
-```
-
-## Stress Test
-
-Run the assignment load test against the API:
-
-```bash
-printf '{"limit":100000}' >/tmp/prime-job.json
-ab -n 5000 -c 200 -p /tmp/prime-job.json -T application/json http://<api-url>/submit
-```
+### 3. Observe Autoscaling
 
 Watch the system while the test runs:
 
@@ -201,72 +250,19 @@ kubectl get pods -l app=worker --watch
 kubectl logs deploy/worker -f
 ```
 
-Expected observations:
+**Expected Observations:**
 
-- Redis queue length grows during the burst.
-- Worker CPU rises as pods process prime jobs.
-- HPA increases worker replicas when average CPU exceeds 70%.
-- Queue length drains as new worker pods become ready.
-- Grafana updates job totals, latency, queue length, and error panels.
+- Redis queue length grows rapidly during the burst.
+- Worker CPU usage rises as pods process prime jobs.
+- HPA automatically increases worker replicas when average CPU exceeds 70%.
+- Queue length drains as new worker pods become ready and process tasks.
+- Grafana panels update in real-time reflecting totals, latency, and queue length.
 
-## Grafana Dashboard
+---
 
-Port-forward Grafana:
+## 🧹 Cleanup
 
-```bash
-kubectl port-forward svc/prometheus-grafana 3000:80
-```
-
-Get the Grafana admin password:
-
-```bash
-kubectl get secret prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
-```
-
-Open `http://localhost:3000`, sign in as `admin`, then import:
-
-```text
-grafana/dashboard.json
-```
-
-The dashboard includes:
-
-- Worker CPU and memory usage
-- Worker replica count and HPA desired replicas
-- Redis queue length
-- Submitted and completed job totals
-- Job processing latency
-- Worker throughput and errors
-
-## Screenshots and Report Notes
-
-Add your screenshots after running the stress test:
-
-- Grafana dashboard before load
-- Grafana dashboard during peak load
-- HPA output showing worker scaling
-- Grafana dashboard after queue drain
-
-Suggested observations to include:
-
-- Peak queue length
-- Maximum worker replica count
-- Approximate time for HPA to react
-- Approximate time for the queue to drain
-- Any job errors seen during the test
-
-## Useful Commands
-
-```bash
-kubectl get all
-kubectl describe hpa worker-hpa
-kubectl port-forward svc/worker 3002:3000
-curl http://localhost:3002/metrics
-kubectl port-forward svc/stats 3001:3000
-curl http://localhost:3001/metrics
-```
-
-## Cleanup
+Remove all resources from your cluster to free up resources:
 
 ```bash
 kubectl delete -f k8s/service-monitors/

@@ -15,6 +15,10 @@ fi
 echo "Enabling metrics-server..."
 minikube addons enable metrics-server
 
+# Enable Ingress controller
+echo "Enabling ingress controller..."
+minikube addons enable ingress
+
 # 2. Build Docker images
 echo "Building Docker images..."
 docker build -t microservices-monitoring/api:1.0.0 -f services/api/Dockerfile .
@@ -42,14 +46,20 @@ kubectl apply -k .
 echo ""
 echo "Deployment complete!"
 echo "--------------------------------------------------------"
-echo "To test the application, run the following commands in your terminal:"
+echo "To test the application via Ingress, follow these steps:"
 echo ""
-echo "1. Port-forward the API (runs in background):"
-echo "   kubectl port-forward svc/api 3000:80 &"
+echo "1. MANUALLY UPDATE /etc/hosts:"
+echo "   Get your Minikube IP by running:"
+echo "     minikube ip"
+echo "   Then, add this line to your /etc/hosts file (requires sudo):"
+echo "     <your-minikube-ip> api.microservices.local worker.microservices.local stats.microservices.local grafana.microservices.local"
 echo ""
-echo "2. Port-forward Grafana (runs in background):"
-echo "   kubectl port-forward svc/prometheus-grafana 3005:80 &"
+echo "2. Access Services (No port-forwarding needed!):"
+echo "   - API:      http://api.microservices.local"
+echo "   - Worker:   http://worker.microservices.local"
+echo "   - Stats:    http://stats.microservices.local"
+echo "   - Grafana:  http://grafana.microservices.local (User: admin, Pass: admin)"
 echo ""
-echo "3. Run the stress test:"
-echo "   ab -n 5000 -c 200 http://localhost:3000/submit"
+echo "3. Run the stress test against the API:"
+echo "   ab -n 5000 -c 200 http://api.microservices.local/submit"
 echo "--------------------------------------------------------"
