@@ -17,6 +17,9 @@ The worker service loads only these values from the root `.env` file during loca
 - `JOB_QUEUE_NAME`
 - `PRIME_LIMIT`
 - `PRIME_LIMIT_MAX`
+- `CORS_ORIGIN`
+- `RATE_LIMIT_WINDOW_MS`
+- `RATE_LIMIT_MAX_REQUESTS`
 
 ## Local Development
 
